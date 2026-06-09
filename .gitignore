@@ -1,23 +1,17 @@
-# Dependencies
+# dependencies
 node_modules/
-**/node_modules/
 
-# Next.js
+# next
 .next/
 out/
 
-# Build
+# turbopack / cache
+.turbo/
+.cache/
+
+# build
 dist/
 build/
 
-# Logs
+# logs
 *.log
-
-# Environment
-.env
-.env.local
-.env.*
-
-*.tsbuildinfo
-.next/
-node_modules/
