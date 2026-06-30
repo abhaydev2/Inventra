@@ -9,6 +9,7 @@ import fs from "fs";
 // Routes
 import userRoutes from "./routes/user.route";
 import productRoutes from "./routes/product.route";
+import adminUserRoutes from "./routes/admin-user.route";
 
 const app: Application = express();
 
@@ -37,6 +38,7 @@ app.use("/uploads", express.static(uploadsDir));
 // API routes
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/admin/users", adminUserRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

@@ -6,7 +6,8 @@ export const CreateUserDTO = UserSchema.pick({
     lastName: true,
     email: true,
     username: true,
-    password: true
+    password: true,
+    role: true
 });
 export type CreateUserDTO = z.infer<typeof CreateUserDTO>;
 

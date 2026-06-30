@@ -11,5 +11,9 @@ export const API_ENDPOINTS = {
         byId: (id: string) => `/products/${id}`,
         lowStock: "/products/low-stock",
         dashboard: "/products/dashboard"
+    },
+    admin: {
+        users: "/admin/users",
+        userById: (id: string) => `/admin/users/${id}`
     }
 };

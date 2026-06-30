@@ -22,6 +22,9 @@ export const registerSchema = z
       .string()
       .min(6, "Password minimum 6 characters"),
 
+    role: z
+      .enum(["admin", "user"]),
+
     confirmPassword: z
       .string(),
   })

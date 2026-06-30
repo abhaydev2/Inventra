@@ -13,7 +13,8 @@ import {
   FaSignOutAlt, 
   FaTimes, 
   FaCamera,
-  FaCheckCircle
+  FaCheckCircle,
+  FaUsers
 } from "react-icons/fa";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Dashboard", path: baseRoute, icon: <FaColumns /> },
     { name: "Inventory", path: `${baseRoute}/inventory`, icon: <FaBoxes /> },
     { name: "Reports", path: `${baseRoute}/reports`, icon: <FaChartBar /> },
+    ...(role === "admin" ? [{ name: "Users", path: "/admin/users", icon: <FaUsers /> }] : []),
     { name: "Profile", path: `${baseRoute}/profile`, icon: <FaUser /> }
   ];
 

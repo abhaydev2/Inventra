@@ -31,6 +31,7 @@ export async function registerAction(payload: {
     email: string;
     username: string;
     password: string;
+    role: string;
 }) {
     try {
         await registerUser(payload);

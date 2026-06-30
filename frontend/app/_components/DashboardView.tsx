@@ -56,7 +56,7 @@ export default function DashboardView({ role }: { role: string }) {
   };
 
   return (
-    <div className="space-y-10 lg:space-y-14 animate-fadeIn w-full max-w-7xl mx-auto py-6 lg:py-10 px-6">
+    <div className="space-y-16 lg:space-y-24 animate-fadeIn w-full max-w-[1800px] mx-auto py-6 px-2">
       
       {/* HEADER SECTION */}
       <div className="space-y-3">
@@ -68,7 +68,7 @@ export default function DashboardView({ role }: { role: string }) {
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         
         {/* Card 1: Total Products */}
-        <div className="bg-[#1e293b]/60 backdrop-blur-md border border-white/5 p-8 lg:p-10 rounded-3xl flex flex-col justify-between shadow-xl min-h-[170px] hover:border-white/10 hover:shadow-2xl transition-all duration-300">
+        <div className="bg-[#1e293b]/60 backdrop-blur-md border border-white/5 p-8 lg:p-10 rounded-3xl flex flex-col justify-between shadow-xl min-h-[220px] hover:border-white/10 hover:shadow-2xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-gray-400">Total Products</span>
             <div className="w-12 h-12 rounded-2xl bg-blue-600/10 text-blue-400 flex items-center justify-center border border-blue-500/10 text-lg">

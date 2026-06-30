@@ -6,6 +6,11 @@ export interface IUserRepository {
     createUser(user: Partial<IUser>): Promise<IUser>;
     getUserById(id: string): Promise<IUser | null>;
     getAll(): Promise<IUser[]>;
+    getPaginatedUsers(
+        page: number,
+        limit: number,
+        search?: string
+    ): Promise<{ users: IUser[]; total: number }>;
     update(id: string, user: Partial<IUser>): Promise<IUser | null>;
     delete(id: string): Promise<boolean>;
 }
@@ -29,6 +34,43 @@ export class UserMongoRepository implements IUserRepository {
 
     async getAll(): Promise<IUser[]> {
         return await UserModel.find().select("-password");
+    }
+
+    async getPaginatedUsers(
+        page: number,
+        limit: number,
+        search?: string
+    ): Promise<{ users: IUser[]; total: number }> {
+        const query: any = {};
+        if (search) {
+            const trimmedSearch = search.trim();
+            query.$or = [
+                { firstName: { $regex: trimmedSearch, $options: "i" } },
+                { lastName: { $regex: trimmedSearch, $options: "i" } },
+                { email: { $regex: trimmedSearch, $options: "i" } },
+                { username: { $regex: trimmedSearch, $options: "i" } }
+            ];
+            
+            // Support first + last name searches (e.g. "John Doe")
+            const parts = trimmedSearch.split(/\s+/).filter(Boolean);
+            if (parts.length > 1) {
+                query.$or.push({
+                    $and: [
+                        { firstName: { $regex: parts[0], $options: "i" } },
+                        { lastName: { $regex: parts[1], $options: "i" } }
+                    ]
+                });
+            }
+        }
+
+        const total = await UserModel.countDocuments(query);
+        const users = await UserModel.find(query)
+            .select("-password")
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        return { users, total };
     }
 
     async update(id: string, user: Partial<IUser>): Promise<IUser | null> {

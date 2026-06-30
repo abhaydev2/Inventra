@@ -37,6 +37,7 @@ export default function RegisterPage() {
         email: data.email,
         username: data.username,
         password: data.password,
+        role: data.role,
       });
 
       if (!result.ok) {
@@ -157,6 +158,19 @@ export default function RegisterPage() {
               </button>
             </div>
             <span>{errors.confirmPassword?.message}</span>
+          </div>
+
+          {/* REGISTER AS ROLE */}
+          <div className="input_group">
+            <label>Register As</label>
+            <select
+              {...register("role")}
+              defaultValue="user"
+            >
+              <option value="user">Standard User</option>
+              <option value="admin">Administrator</option>
+            </select>
+            <span>{errors.role?.message}</span>
           </div>
 
           {/* REGISTER BUTTON */}
