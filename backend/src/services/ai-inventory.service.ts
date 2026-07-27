@@ -4,6 +4,9 @@ import { InventoryAlertModel } from "../models/inventory-alert.model";
 import { InventoryAnalyticsService } from "./inventory-analytics.service";
 import { GeminiService } from "./gemini.service";
 import { AIInventoryAnalysis } from "../schemas/ai-inventory.schema";
+import { AIImageAnalysisModel } from "../models/ai-image-analysis.model";
+import { Express } from "express";
+import fs from "fs";
 
 export class AIInventoryService {
  private analytics=new InventoryAnalyticsService(); private gemini=new GeminiService();
@@ -12,5 +15,7 @@ export class AIInventoryService {
  async alerts(query:any){ const filter:any={status:query.status||"active"}; if(query.severity)filter.severity=query.severity;if(query.type)filter.alertType=query.type; const page=Math.max(1,Number(query.page)||1),limit=Math.min(50,Math.max(1,Number(query.limit)||20)); const [items,total]=await Promise.all([InventoryAlertModel.find(filter).populate("productId","name category").sort({severity:1,generatedAt:-1}).skip((page-1)*limit).limit(limit),InventoryAlertModel.countDocuments(filter)]); return {items,page,limit,total}; }
  async forecast(days:number){const data=await this.analytics.calculate();return data.metrics.map(metric=>({productId:metric.productId,productName:metric.productName,currentStock:metric.currentStock,averageDailySales:metric.averageDailySales,forecastDemand:days===7?metric.forecast7:days===14?metric.forecast14:metric.forecast30,estimatedDaysRemaining:metric.estimatedDaysRemaining,recommendedReorderQuantity:metric.recommendedReorderQuantity,riskLevel:metric.riskLevel}));}
  async product(id:string){const data=await this.analytics.calculate();return data.metrics.find(metric=>metric.productId===id)||null;}
- async image(buffer:Buffer,mime:string){return this.gemini.analyzeImage(buffer,mime);}
+ async image(userId:string,file:Express.Multer.File){let observation="Image saved successfully. Add a Gemini API key to generate an inventory observation.";let aiAvailable=false;try{observation=await this.gemini.analyzeImage(fs.readFileSync(file.path),file.mimetype);aiAvailable=true;}catch{}const saved=await AIImageAnalysisModel.create({userId,image:`/uploads/ai-analysis/${file.filename}`,observation});return {id:saved._id,image:saved.image,observation:saved.observation,aiAvailable,createdAt:saved.createdAt};}
+ async imageHistory(userId:string){return AIImageAnalysisModel.find({userId}).sort({createdAt:-1}).limit(12).select("image observation createdAt").lean();}
+ async question(question:string){const deterministic=await this.analytics.calculate();const data={summary:deterministic.summary,products:deterministic.metrics.slice(0,Number(process.env.GEMINI_MAX_PRODUCTS_PER_REQUEST||50)),attention:deterministic.attention.slice(0,20)};return {answer:await this.gemini.answerInventoryQuestion(question,data),generatedAt:new Date().toISOString()};}
 }
