@@ -7,7 +7,9 @@ export const ProductSchema = z.object({
     quantity: z.number().int().min(0, "Quantity must be non-negative"),
     category: z.string().min(1, "Category is required"),
     sku: z.string().min(1, "SKU is required"),
-    lowStockThreshold: z.number().int().min(0).default(10)
+    lowStockThreshold: z.number().int().min(0).default(10),
+    image: z.string().optional().nullable(),
+    salesCount: z.number().int().default(0)
 });
 
 export type ProductType = z.infer<typeof ProductSchema>;

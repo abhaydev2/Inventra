@@ -57,6 +57,24 @@ export class ProductController {
         }
     }
 
+    async uploadProductImage(req: Request, res: Response) {
+        try {
+            if (!req.file) return ApiResponseHelper.error(res, "Product image file is required", 400);
+            const id = String(req.params.id);
+            const existing = await productService.getProduct(id);
+            const imagePath = `/uploads/products/${req.file.filename}`;
+            const updated = await productService.updateProductImage(id, imagePath);
+            const oldImage = existing.image;
+            if (oldImage?.startsWith("/uploads/products/")) {
+                const oldPath = require("path").join(process.cwd(), oldImage.slice(1));
+                if (require("fs").existsSync(oldPath)) require("fs").unlinkSync(oldPath);
+            }
+            return ApiResponseHelper.success(res, updated, "Product image uploaded successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message || "Failed to upload product image", error.status || 500);
+        }
+    }
+
     async deleteProduct(req: Request, res: Response) {
         try {
             await productService.deleteProduct(req.params.id as string);

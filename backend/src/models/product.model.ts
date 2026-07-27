@@ -17,6 +17,8 @@ const ProductMongoSchema: Schema = new Schema<IProduct>(
         category: { type: String, required: true },
         sku: { type: String, required: true, unique: true },
         lowStockThreshold: { type: Number, default: 10 },
+        image: { type: String, default: "" },
+        salesCount: { type: Number, default: 0, required: true },
         createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true }
     },
     {

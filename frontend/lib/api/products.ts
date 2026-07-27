@@ -55,6 +55,12 @@ export async function deleteProduct(id: string) {
     return apiRequest(API_ENDPOINTS.products.byId(id), { method: "DELETE" });
 }
 
+export async function uploadProductImage(id: string, image: File) {
+    const formData = new FormData();
+    formData.append("productImage", image);
+    return apiRequest<{ data: Product }>(`${API_ENDPOINTS.products.byId(id)}/image`, { method: "POST", body: formData });
+}
+
 export async function getDashboardStats() {
     return apiRequest<{ data: { totalProducts: number; totalStock: number; lowStockItems: number; totalInventoryValue: number } }>(
         API_ENDPOINTS.products.dashboard
