@@ -18,6 +18,10 @@ export const registerSchema = z
       .string()
       .email("Enter valid email"),
 
+    phone: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits"),
+
     password: z
       .string()
       .min(6, "Password minimum 6 characters"),
