@@ -32,7 +32,7 @@ export class AdminUserController {
 
     async getUserById(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = String(req.params.id);
             const user = await adminUserService.getUserById(id);
             return ApiResponseHelper.success(res, user, "User details fetched successfully");
         } catch (error: any) {
@@ -64,7 +64,7 @@ export class AdminUserController {
 
     async updateUser(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = String(req.params.id);
             const parsedData = AdminUpdateUserDTO.safeParse(req.body);
             if (!parsedData.success) {
                 return ApiResponseHelper.error(res, z.prettifyError(parsedData.error), 400);
@@ -83,7 +83,7 @@ export class AdminUserController {
 
     async deleteUser(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = String(req.params.id);
             const callerId = (req.user as any)._id.toString();
 
             await adminUserService.deleteUser(id, callerId);
