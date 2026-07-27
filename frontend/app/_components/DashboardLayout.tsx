@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -14,8 +14,15 @@ import {
   FaTimes, 
   FaCamera,
   FaCheckCircle,
-  FaUsers
+  FaUsers,
+  FaCog,
+  FaBars,
+  FaHeart,
+  FaShoppingCart,
+  FaBoxOpen
+  ,FaMapMarkerAlt
 } from "react-icons/fa";
+import { AppNotification, getNotifications, markNotificationsRead } from "@/lib/api/notifications";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, loading } = useAuth();
@@ -24,6 +31,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDropdownMenu, setShowDropdownMenu] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [showLocation, setShowLocation] = useState(false);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationError, setLocationError] = useState("");
+
+  useEffect(() => {
+    setImageError(false);
+  }, [user]);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("system_theme") || "dark";
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => { try { const response = await getNotifications(); setNotifications(response.data); } catch { /* keep the dashboard usable if polling fails */ } };
+    void load(); const timer = window.setInterval(() => void load(), 30000); return () => window.clearInterval(timer);
+  }, [user]);
+
+  const unreadCount = notifications.filter(item => !item.isReadBy?.map(String).includes(String(user?._id))).length;
+  const requestLocation = () => {
+    setShowLocation(true); setLocationError("");
+    if (!navigator.geolocation) { setLocationError("Your browser does not support location services."); return; }
+    navigator.geolocation.getCurrentPosition(position => setLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude }), () => setLocationError("Location access was denied. Enable it in your browser and try again."), { enableHighAccuracy: true, timeout: 10000 });
+  };
+  const openNotifications = async () => { setShowNotifications(true); if (unreadCount) { try { await markNotificationsRead(); setNotifications(items => items.map(item => ({ ...item, isReadBy: [...(item.isReadBy || []), String(user?._id)] }))); } catch {} } };
 
   if (loading) {
     return (
@@ -59,9 +99,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Get user initials for default avatar
   const getInitials = () => {
     if (!user) return "A";
-    const first = user.firstName ? user.firstName[0] : "";
-    const last = user.lastName ? user.lastName[0] : "";
-    return (first + last).toUpperCase() || user.username?.[0].toUpperCase() || "U";
+    const name = user.firstName || user.username || "U";
+    return name[0].toUpperCase();
   };
 
   const profileImageUrl = user?.profileImage
@@ -109,10 +148,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* USER SECTION BOTTOM */}
         <div className="p-4 border-t border-white/5 bg-slate-900/40">
           <div className="flex items-center gap-3">
-            {profileImageUrl ? (
+            {profileImageUrl && !imageError ? (
               <img
                 src={profileImageUrl}
                 alt="Profile"
+                onError={() => setImageError(true)}
                 className="w-10 h-10 rounded-full object-cover border border-white/10"
               />
             ) : (
@@ -143,10 +183,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* HEADER */}
         <header className="h-16 bg-[#0f172a]/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 z-10">
           <div className="flex items-center gap-3">
-            {profileImageUrl ? (
+            {profileImageUrl && !imageError ? (
               <img
                 src={profileImageUrl}
                 alt="Profile"
+                onError={() => setImageError(true)}
                 className="w-8 h-8 rounded-full object-cover border border-white/10"
               />
             ) : (
@@ -159,20 +200,89 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 relative">
+            <button onClick={requestLocation} className="hidden sm:flex items-center gap-2 rounded-full px-3 py-2 text-xs text-gray-400 hover:bg-white/5 hover:text-white transition-all" title="Current location and map"><FaMapMarkerAlt className="text-red-400" /><span>Location</span></button>
             {/* NOTIFICATION BUTTON */}
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={openNotifications}
               className={`p-2.5 rounded-full transition-all relative ${
                 showNotifications 
                   ? "bg-blue-600/20 text-blue-400" 
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
+              title="Notifications"
             >
               <FaBell className="text-lg" />
-              {/* Notification badge */}
-              <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-[#0f172a]"></span>
+              {unreadCount > 0 && <span className="absolute top-1 right-1 min-w-4 h-4 px-1 bg-blue-500 rounded-full border border-[#0f172a] text-[9px] text-white flex items-center justify-center">{unreadCount > 9 ? "9+" : unreadCount}</span>}
             </button>
+
+            {/* SETTING BUTTON */}
+            <button
+              onClick={() => router.push(`${baseRoute}/settings`)}
+              className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+              title="Settings"
+            >
+              <FaCog className="text-lg" />
+            </button>
+
+            {/* HAMBURGER QUICK MENU */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdownMenu(!showDropdownMenu)}
+                className={`p-2.5 rounded-full transition-all ${
+                  showDropdownMenu 
+                    ? "bg-blue-600/20 text-blue-400" 
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+                title="Quick Access Menu"
+              >
+                <FaBars className="text-lg" />
+              </button>
+
+              {showDropdownMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowDropdownMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-52 bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl py-2 z-20 animate-scaleIn">
+                    <div className="px-4 py-2 border-b border-white/5 text-[10px] uppercase font-bold tracking-wider text-gray-400">
+                      Quick Navigation
+                    </div>
+                    <button
+                      onClick={() => {
+                        router.push(`${baseRoute}/products`);
+                        setShowDropdownMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 hover:text-white transition-all flex items-center gap-3"
+                    >
+                      <FaBoxOpen className="text-blue-400 text-base" />
+                      <span>Products Store</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push(`${baseRoute}/orders`);
+                        setShowDropdownMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 hover:text-white transition-all flex items-center gap-3"
+                    >
+                      <FaShoppingCart className="text-emerald-400 text-base" />
+                      <span>Orders List</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push(`${baseRoute}/wishlist`);
+                        setShowDropdownMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 hover:text-white transition-all flex items-center gap-3"
+                    >
+                      <FaHeart className="text-rose-400 text-base" />
+                      <span>Wish List</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
@@ -201,8 +311,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               </div>
 
-              {/* EMPTY NOTIFICATION AREA */}
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+              {notifications.length === 0 ? <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-gray-500 mb-4 animate-pulse">
                   <FaBell className="text-2xl" />
                 </div>
@@ -210,10 +319,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <p className="text-xs text-gray-400 max-w-[200px]">
                   You have no unread notifications right now.
                 </p>
-              </div>
+              </div> : <div className="flex-1 overflow-y-auto space-y-3 pr-1">{notifications.map(notification => <div key={notification._id} className="rounded-xl border border-white/5 bg-white/[0.03] p-3"><p className="text-xs font-bold text-white">{notification.title}</p><p className="mt-1 text-xs leading-5 text-gray-400">{notification.message}</p><p className="mt-2 text-[10px] text-gray-500">{new Date(notification.createdAt).toLocaleString()}</p></div>)}</div>}
             </div>
           </>
         )}
+
+        {showLocation && <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"><div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0f172a] p-6 shadow-2xl"><div className="flex items-center justify-between"><h3 className="flex items-center gap-2 font-bold"><FaMapMarkerAlt className="text-red-400" /> Current location</h3><button onClick={() => setShowLocation(false)} className="text-gray-400 hover:text-white"><FaTimes /></button></div>{location ? <div className="mt-5 space-y-4"><p className="text-sm text-gray-300">Latitude {location.latitude.toFixed(6)}, longitude {location.longitude.toFixed(6)}</p><a className="block rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold hover:bg-blue-500" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}>Open current location in Google Maps</a></div> : <p className="mt-5 text-sm text-gray-400">{locationError || "Finding your current location…"}</p>}</div></div>}
 
         {/* LOGOUT CONFIRMATION MODAL */}
         {showLogoutModal && (
