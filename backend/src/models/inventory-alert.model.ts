@@ -1,0 +1,6 @@
+import mongoose, { Document, Schema } from "mongoose";
+export type AlertType = "low_stock" | "out_of_stock" | "stock_out_risk" | "overstock" | "slow_moving" | "unusual_demand";
+export interface IInventoryAlert extends Document { productId: mongoose.Types.ObjectId; alertType: AlertType; severity: "low"|"medium"|"high"|"critical"; title: string; message: string; currentStock: number; reorderLevel: number; estimatedDaysRemaining?: number|null; recommendedReorderQuantity?: number; source: "system"|"gemini"; status: "active"|"reviewed"|"resolved"|"dismissed"; generatedAt: Date; }
+const schema = new Schema<IInventoryAlert>({ productId: { type: Schema.Types.ObjectId, ref: "Product", required: true }, alertType: { type: String, required: true }, severity: { type: String, required: true }, title: String, message: String, currentStock: Number, reorderLevel: Number, estimatedDaysRemaining: Number, recommendedReorderQuantity: Number, source: { type: String, default: "system" }, status: { type: String, default: "active" }, generatedAt: { type: Date, default: Date.now } }, { timestamps: true });
+schema.index({ productId: 1, alertType: 1, status: 1 }, { unique: true, partialFilterExpression: { status: "active" } });
+export const InventoryAlertModel = mongoose.model<IInventoryAlert>("InventoryAlert", schema);

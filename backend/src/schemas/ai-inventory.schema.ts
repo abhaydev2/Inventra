@@ -1,0 +1,4 @@
+import { z } from "zod";
+export const RiskSchema = z.enum(["low", "medium", "high", "critical"]);
+export const AIInventoryAnalysisSchema = z.object({ generatedAt: z.string(), summary: z.string().max(2000), overallRisk: RiskSchema, urgentProducts: z.array(z.object({ productId: z.string(), productName: z.string(), riskLevel: RiskSchema, alertType: z.enum(["low_stock","stock_out_risk","out_of_stock","overstock","slow_moving","unusual_demand"]), estimatedDaysRemaining: z.number().nullable(), recommendedReorderQuantity: z.number().int().min(0), reason: z.string(), recommendedAction: z.string() })).max(50), insights: z.array(z.object({ title: z.string(), description: z.string(), priority: z.enum(["low","medium","high"]) })).max(20) });
+export type AIInventoryAnalysis = z.infer<typeof AIInventoryAnalysisSchema>;
