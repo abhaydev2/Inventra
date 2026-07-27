@@ -2,10 +2,12 @@ import { ProductMongoRepository } from "../repositories/product.repository";
 import { CreateProductDTO, UpdateProductDTO } from "../dtos/product.dto";
 import { IProduct } from "../models/product.model";
 import { HttpException } from "../exceptions/http-exception";
+import { NotificationService } from "./notification.service";
 
 const productRepository = new ProductMongoRepository();
 
 export class ProductService {
+    private notificationService = new NotificationService();
     async createProduct(productData: CreateProductDTO, userId: string): Promise<IProduct> {
         const existingSku = await productRepository.getProductBySku(productData.sku);
         if (existingSku) {
@@ -15,6 +17,7 @@ export class ProductService {
             ...productData,
             createdBy: userId as any
         });
+        await this.notificationService.create({ audience: "user", type: "inventory", title: "New inventory available", message: `${product.name} is now available in the catalog.`, metadata: { productId: product._id.toString() } });
         return product;
     }
 
@@ -39,13 +42,25 @@ export class ProductService {
 
         const updated = await productRepository.update(id, productData);
         if (!updated) throw new HttpException(500, "Failed to update product");
+        await this.notificationService.create({ audience: "user", type: "inventory", title: "Inventory updated", message: `${updated.name} has been updated by the inventory administrator.`, metadata: { productId: updated._id.toString() } });
+        if (updated.quantity === 0) await this.notificationService.create({ audience: "admin", type: "inventory", title: "Out of stock", message: `${updated.name} is out of stock and needs replenishment.`, metadata: { productId: updated._id.toString() } });
+        return updated;
+    }
+
+    async updateProductImage(id: string, image: string): Promise<IProduct> {
+        const product = await productRepository.getProductById(id);
+        if (!product) throw new HttpException(404, "Product not found");
+        const updated = await productRepository.update(id, { image });
+        if (!updated) throw new HttpException(500, "Failed to update product image");
         return updated;
     }
 
     async deleteProduct(id: string): Promise<boolean> {
         const existing = await productRepository.getProductById(id);
         if (!existing) throw new HttpException(404, "Product not found");
-        return await productRepository.delete(id);
+        const removed = await productRepository.delete(id);
+        if (removed) await this.notificationService.create({ audience: "user", type: "inventory", title: "Product removed", message: `${existing.name} is no longer available in the catalog.` });
+        return removed;
     }
 
     async getLowStockProducts(): Promise<IProduct[]> {
