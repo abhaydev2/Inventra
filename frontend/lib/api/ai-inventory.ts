@@ -1,0 +1,5 @@
+import { apiRequest } from "./axios-instance";
+export interface AIOverview { deterministic:{totalActiveProducts:number;lowStock:number;outOfStock:number;critical:number;overstock:number;slowMoving:number;inventoryValue:number;estimatedRestockQuantity:number}; analysis:{generatedAt:string;summary:string;overallRisk:string;urgentProducts:Array<{productId:string;productName:string;riskLevel:string;alertType:string;estimatedDaysRemaining:number|null;recommendedReorderQuantity:number;reason:string;recommendedAction:string}>;insights:Array<{title:string;description:string;priority:string}>}; alerts:any[];fallbackUsed:boolean;cached:boolean; }
+export const getAIOverview=()=>apiRequest<{data:AIOverview}>("/ai/inventory/overview");
+export const refreshAIOverview=()=>apiRequest<{data:AIOverview}>("/ai/inventory/analyze",{method:"POST"});
+export async function analyzeInventoryImage(file:File){const body=new FormData();body.append("image",file);return apiRequest<{data:{observation:string}}>("/ai/inventory/image-analysis",{method:"POST",body});}

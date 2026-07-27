@@ -1,0 +1,1 @@
+import DashboardLayout from "@/app/_components/DashboardLayout"; import AIInventoryView from "@/app/_components/AIInventoryView"; export default function Page(){return <DashboardLayout><AIInventoryView/></DashboardLayout>}
