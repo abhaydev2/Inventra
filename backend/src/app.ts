@@ -10,6 +10,13 @@ import fs from "fs";
 import userRoutes from "./routes/user.route";
 import productRoutes from "./routes/product.route";
 import adminUserRoutes from "./routes/admin-user.route";
+import orderRoutes from "./routes/order.route";
+import communicationRoutes from "./routes/communication.route";
+import paymentRoutes from "./routes/payment.route";
+import cartRoutes from "./routes/cart.route";
+import addressRoutes from "./routes/address.route";
+import notificationRoutes from "./routes/notification.route";
+import aiInventoryRoutes from "./routes/ai-inventory.route";
 
 const app: Application = express();
 
@@ -25,7 +32,8 @@ if (!fs.existsSync(profileUploadsDir)) {
 
 // FIXED — allows your phone and any device:
 const corsOptions = {
-    origin: "*",
+    origin: (process.env.FRONTEND_URL || "http://localhost:3000").split(",").map(value => value.trim()),
+    credentials: true,
     successStatus: 200
 };
 
@@ -39,6 +47,13 @@ app.use("/uploads", express.static(uploadsDir));
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/admin/users", adminUserRoutes);
+app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/comms", communicationRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/cart", cartRoutes);
+app.use("/api/v1/addresses", addressRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/ai", aiInventoryRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
