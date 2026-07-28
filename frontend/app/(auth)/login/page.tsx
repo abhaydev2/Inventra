@@ -10,9 +10,11 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { loginSchema, LoginType } from "../_component/loginZod";
 import { useTogglePassword } from "@/hooks/tooglepassword";
 import { loginAction } from "../_component/authentication_action";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { checkAuth } = useAuth();
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
   const { showPassword, togglePassword } = useTogglePassword();
@@ -47,6 +49,9 @@ export default function LoginPage() {
       if (result.token) {
         localStorage.setItem("token", result.token);
       }
+
+      // Sync auth state in context immediately
+      await checkAuth();
 
       // Redirect based on role
       if (result.user?.role === "admin") {
