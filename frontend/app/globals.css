@@ -24,3 +24,163 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ==========================================
+   CLASSIC LIGHT MODE THEME OVERRIDES
+   ========================================== */
+
+html.light body,
+html.light .bg-\[\#0b0f19\],
+html.light .bg-slate-950\/40 {
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Sidebar structure */
+html.light aside,
+html.light .bg-\[\#0f172a\]\/90 {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Header bar */
+html.light header,
+html.light .bg-\[\#0f172a\]\/50 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #334155 !important;
+}
+
+/* General white text overrides to slate */
+html.light .text-white,
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light th {
+  color: #0f172a !important;
+}
+
+/* General grey text overrides to darker slates */
+html.light .text-gray-300,
+html.light .text-gray-400,
+html.light .text-gray-500 {
+  color: #475569 !important;
+}
+
+/* Keep white text on primary/colored buttons & badges */
+html.light .bg-blue-600,
+html.light .bg-blue-500,
+html.light .bg-emerald-600,
+html.light .bg-emerald-500,
+html.light .bg-red-600,
+html.light .bg-red-500,
+html.light .bg-indigo-600,
+html.light .bg-indigo-500,
+html.light button.bg-blue-600 *,
+html.light button.bg-blue-500 *,
+html.light button.bg-emerald-600 *,
+html.light button.bg-emerald-500 *,
+html.light button.bg-red-600 *,
+html.light button.bg-red-500 *,
+html.light a.bg-gradient-to-r *,
+html.light span.bg-emerald-500\/10 *,
+html.light span.bg-amber-500\/10 *,
+html.light span.bg-red-500\/10 * {
+  color: revert !important;
+}
+
+html.light button.bg-blue-600,
+html.light button.bg-blue-500,
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-500,
+html.light button.bg-red-600,
+html.light button.bg-red-500,
+html.light .bg-blue-600.text-white,
+html.light .bg-blue-500.text-white,
+html.light .bg-emerald-600.text-white,
+html.light .bg-emerald-500.text-white,
+html.light .bg-red-600.text-white,
+html.light .bg-red-500.text-white {
+  color: #ffffff !important;
+}
+
+/* Cards & containers styling */
+html.light .bg-\[\#1e293b\]\/40,
+html.light .bg-\[\#1e293b\]\/60,
+html.light .bg-\[\#1e293b\],
+html.light .bg-slate-900\/30,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/25,
+html.light .bg-slate-900\/20,
+html.light .bg-slate-900\/10 {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Forms input fields styling */
+html.light select,
+html.light input,
+html.light textarea {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+
+html.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Borders & Dividers */
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/2,
+html.light .divide-white\/5 > * {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Interactive hover elements */
+html.light .hover\:bg-white\/2:hover,
+html.light .hover\:bg-\[\#1e293b\]\/70:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Table styling adjustments */
+html.light table th {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Sidebar navigation links */
+html.light aside a {
+  color: #475569 !important;
+}
+
+html.light aside a.bg-gradient-to-r {
+  color: #ffffff !important;
+}
+
+html.light aside a:hover:not(.bg-gradient-to-r) {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #0f172a !important;
+}
+
+html.light aside p.truncate,
+html.light aside p.capitalize {
+  color: #334155 !important;
+}
+
+html.light aside div.border-t {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  background-color: #f8fafc !important;
+}
