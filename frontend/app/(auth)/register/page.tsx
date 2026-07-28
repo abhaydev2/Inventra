@@ -35,6 +35,7 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
+        phone: data.phone,
         username: data.username,
         password: data.password,
         role: data.role,
@@ -116,6 +117,18 @@ export default function RegisterPage() {
               {...register("email")}
             />
             <span>{errors.email?.message}</span>
+          </div>
+
+          {/* PHONE */}
+          <div className="input_group">
+            <label>Phone Number</label>
+            <input
+              type="text"
+              placeholder="Enter phone number"
+              autoComplete="off"
+              {...register("phone")}
+            />
+            <span>{errors.phone?.message}</span>
           </div>
 
           {/* PASSWORD */}
