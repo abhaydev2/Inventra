@@ -4,7 +4,10 @@
   "main": "index.ts",
   "scripts": {
     "dev": "npx tsx --watch index.ts",
-    "start": "npx tsx index.ts"
+    "start": "npx tsx index.ts",
+    "test:unit": "jest --runInBand tests/unit",
+    "test:integration": "jest --runInBand tests/integration",
+    "test": "jest --runInBand"
   },
   "keywords": [],
   "author": "",
@@ -12,12 +15,16 @@
   "description": "Inventory Management System Backend API",
   "devDependencies": {
     "@types/cors": "^2.8.19",
+    "@types/jest": "^30.0.0",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.6.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@google/genai": "^2.13.0",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
