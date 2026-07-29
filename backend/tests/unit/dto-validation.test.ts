@@ -50,12 +50,13 @@ describe("user DTO validation", () => {
     assert.equal(result.role, "user");
   });
 
+  test("rejects an admin role for public registration", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, role: "admin" }).success, false));
   test("rejects an invalid email", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, email: "not-an-email" }).success, false));
   test("rejects a username shorter than three characters", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, username: "ab" }).success, false));
   test("rejects a password shorter than six characters", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, password: "short" }).success, false));
   test("rejects an unsupported role", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, role: "manager" }).success, false));
   test("accepts a null phone number", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, phone: null }).success, true));
-  test("accepts a valid admin role", () => assert.equal(CreateUserDTO.safeParse({ ...validUser, role: "admin" }).success, true));
+  test("defaults to a user role for public registration", () => assert.equal(CreateUserDTO.parse(validUser).role, "user"));
   test("allows an empty user update", () => assert.equal(UpdateUserDTO.safeParse({}).success, true));
 });
 
