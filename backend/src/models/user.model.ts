@@ -17,7 +17,9 @@ const UserMongoSchema: Schema = new Schema<IUser>(
         role: { type: String, enum: ["admin", "user"], default: "user" },
         profileImage: { type: String, default: null },
         phone: { type: String, default: null },
-        wishlist: [{ type: String, default: [] }]
+        wishlist: [{ type: String, default: [] }],
+        passwordResetToken: { type: String, default: null },
+        passwordResetExpiresAt: { type: Date, default: null }
     },
     {
         timestamps: true
