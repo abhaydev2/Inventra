@@ -25,6 +25,7 @@ export default function ProductsView({ role }: { role: string }) {
   };
 
   const handleQtyChange = (item: CartItem, delta: number) => {
+    if (isAdmin) return;
     const maxStock = getProductStock(item.productId);
     const newQty = item.quantity + delta;
     if (newQty >= 1 && newQty <= maxStock) {
@@ -45,7 +46,7 @@ export default function ProductsView({ role }: { role: string }) {
             <FaShoppingCart className="text-blue-500" /> Products Selection List
           </h1>
         </div>
-        {cart.length > 0 && (
+        {cart.length > 0 && !isAdmin && (
           <button
             onClick={clearCart}
             className="px-4 py-2 bg-red-600/10 hover:bg-red-600 border border-red-500/25 text-red-400 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
@@ -63,7 +64,9 @@ export default function ProductsView({ role }: { role: string }) {
           </div>
           <h3 className="font-bold text-white text-xl">Your selection list is empty</h3>
           <p className="text-sm text-gray-400 mt-2 max-w-md leading-relaxed">
-            You haven't selected any products to order yet. Explore our catalog in the Inventory page and add products to your purchase list.
+            {isAdmin
+              ? "Admins can manage inventory, but they cannot create purchase selections or place orders."
+              : "You haven't selected any products to order yet. Explore our catalog in the Inventory page and add products to your purchase list."}
           </p>
           <button
             onClick={() => router.push(`${baseRoute}/inventory`)}
@@ -107,7 +110,7 @@ export default function ProductsView({ role }: { role: string }) {
                           <div className="flex items-center gap-2.5">
                             <button
                               onClick={() => handleQtyChange(item, -1)}
-                              disabled={item.quantity <= 1}
+                              disabled={item.quantity <= 1 || isAdmin}
                               className="p-1.5 bg-slate-900 border border-white/10 rounded-lg text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                             >
                               <FaMinus className="text-[10px]" />
@@ -115,7 +118,7 @@ export default function ProductsView({ role }: { role: string }) {
                             <span className="font-extrabold text-white text-sm w-6 text-center">{item.quantity}</span>
                             <button
                               onClick={() => handleQtyChange(item, 1)}
-                              disabled={item.quantity >= maxStock}
+                              disabled={item.quantity >= maxStock || isAdmin}
                               className="p-1.5 bg-slate-900 border border-white/10 rounded-lg text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                             >
                               <FaPlus className="text-[10px]" />
@@ -133,7 +136,8 @@ export default function ProductsView({ role }: { role: string }) {
                         {/* Remove Button */}
                         <button
                           onClick={() => removeFromCart(item.productId)}
-                          className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
+                          disabled={isAdmin}
+                          className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Remove item"
                         >
                           <FaTrashAlt className="text-sm" />
@@ -184,9 +188,10 @@ export default function ProductsView({ role }: { role: string }) {
 
             <button
               onClick={() => router.push(`${baseRoute}/orders`)}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 transition-colors font-bold rounded-xl text-sm shadow-lg shadow-blue-600/15 flex items-center justify-center gap-2 cursor-pointer text-white"
+              disabled={isAdmin}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold rounded-xl text-sm shadow-lg shadow-blue-600/15 flex items-center justify-center gap-2 cursor-pointer text-white"
             >
-              <span>Proceed to Order Page</span>
+              <span>{isAdmin ? "Admins cannot place orders" : "Proceed to Order Page"}</span>
               <FaArrowRight className="text-xs" />
             </button>
           </div>
