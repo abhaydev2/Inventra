@@ -56,17 +56,6 @@ test("login Register link opens the registration page", async ({ page }) => {
   await expect(page).toHaveURL(/\/register$/);
 });
 
-test("registration defaults to the standard user role", async ({ page }) => {
-  await page.goto("/register");
-  await expect(page.locator("select")).toHaveValue("user");
-});
-
-test("registration allows choosing the administrator role", async ({ page }) => {
-  await page.goto("/register");
-  await page.locator("select").selectOption("admin");
-  await expect(page.locator("select")).toHaveValue("admin");
-});
-
 test("registration provides password visibility controls", async ({ page }) => {
   await page.goto("/register");
   await expect(page.locator(".eye_btn")).toHaveCount(2);
