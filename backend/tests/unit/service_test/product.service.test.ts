@@ -28,7 +28,8 @@ afterAll(async () => {
       category: "Shoes",
       price: 4500,
       quantity: 20,
-      lowStockThreshold: 5
+      lowStockThreshold: 5,
+      salesCount: 0
     };
 
     const product = await service.createProduct(payload, mockUserId);
