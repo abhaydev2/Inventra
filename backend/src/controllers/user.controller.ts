@@ -33,6 +33,38 @@ export class UserController {
         }
     }
 
+    async forgotPassword(req: Request, res: Response) {
+        try {
+            const parsed = z.object({ email: z.string().email("Invalid email address") }).safeParse(req.body);
+            if (!parsed.success) {
+                return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
+            }
+
+            const result = await userService.requestPasswordReset(parsed.data.email);
+            return ApiResponseHelper.success(res, result, result.message);
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+        }
+    }
+
+    async resetPassword(req: Request, res: Response) {
+        try {
+            const parsed = z.object({
+                token: z.string().min(1, "Reset token is required"),
+                password: z.string().min(6, "Password must be at least 6 characters long")
+            }).safeParse(req.body);
+
+            if (!parsed.success) {
+                return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
+            }
+
+            const updatedUser = await userService.resetPassword(parsed.data.token, parsed.data.password);
+            return ApiResponseHelper.success(res, updatedUser, "Password reset successfully");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+        }
+    }
+
     async getProfile(req: Request, res: Response) {
         try {
             return ApiResponseHelper.success(res, req.user, "Profile fetched successfully");

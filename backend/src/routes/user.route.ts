@@ -31,6 +31,8 @@ const userController = new UserController();
 // Public routes
 userRouter.post("/register", userController.register);
 userRouter.post("/login", userController.login);
+userRouter.post("/forgot-password", userController.forgotPassword);
+userRouter.post("/reset-password", userController.resetPassword);
 
 // Protected routes (authenticated user)
 userRouter.get("/profile", authorizedMiddleware, userController.getProfile);
