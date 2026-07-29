@@ -93,6 +93,10 @@ export default function OrdersView({ role }: { role: string }) {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAdmin) {
+      setCheckoutError("Admins cannot place purchase orders.");
+      return;
+    }
     if (cart.length === 0) return;
     setSubmittingOrder(true);
     setCheckoutError("");
@@ -309,10 +313,10 @@ export default function OrdersView({ role }: { role: string }) {
                 {/* Buy Button */}
                 <button
                   type="submit"
-                  disabled={submittingOrder}
+                  disabled={submittingOrder || isAdmin}
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold rounded-xl text-xs shadow-lg shadow-emerald-600/10 cursor-pointer text-center text-white"
                 >
-                  {submittingOrder ? (paymentMethod === "esewa" ? "Redirecting to eSewa..." : "Placing Purchase Order...") : (paymentMethod === "esewa" ? "Pay with eSewa" : "Confirm & Place Purchase Order")}
+                  {isAdmin ? "Admins cannot place orders" : (submittingOrder ? (paymentMethod === "esewa" ? "Redirecting to eSewa..." : "Placing Purchase Order...") : (paymentMethod === "esewa" ? "Pay with eSewa" : "Confirm & Place Purchase Order"))}
                 </button>
               </form>
             </div>
