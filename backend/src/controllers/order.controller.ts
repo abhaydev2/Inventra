@@ -7,9 +7,13 @@ const orderService = new OrderService();
 export class OrderController {
     async createOrder(req: Request, res: Response) {
         try {
-            const customerEmail = (req.user as any).email;
-            const customerName = `${(req.user as any).firstName || ""} ${(req.user as any).lastName || ""}`.trim();
-            const orderData = { ...req.body, customerEmail, customerName, customerId: (req.user as any)._id };
+            const user = req.user as any;
+            if (user?.role === "admin") {
+                return ApiResponseHelper.error(res, "Admins cannot place purchase orders", 403);
+            }
+            const customerEmail = user.email;
+            const customerName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+            const orderData = { ...req.body, customerEmail, customerName, customerId: user._id };
             const newOrder = await orderService.createOrder(orderData);
             return ApiResponseHelper.success(res, newOrder, "Order placed successfully", 201);
         } catch (error: any) {
