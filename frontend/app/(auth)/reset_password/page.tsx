@@ -3,8 +3,7 @@
 import "./reset_password.css";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { resetPassword } from "../../../lib/api/auth";
 
@@ -13,9 +12,7 @@ type ResetType = {
   confirmPassword: string;
 };
 
-function ResetPasswordForm() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
+export default function ResetPasswordPage() {
   const {
     register,
     handleSubmit,
@@ -34,6 +31,7 @@ function ResetPasswordForm() {
     setMessage("");
 
     try {
+      const token = new URLSearchParams(window.location.search).get("token") || "";
       const response = await resetPassword(token, data.password);
       setMessage(response.data.message || "Password reset successfully");
     } catch (error: any) {
@@ -87,13 +85,5 @@ function ResetPasswordForm() {
         </p>
       </div>
     </div>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={<div className="rp_page"><div className="rp_card"><p>Loading...</p></div></div>}>
-      <ResetPasswordForm />
-    </Suspense>
   );
 }

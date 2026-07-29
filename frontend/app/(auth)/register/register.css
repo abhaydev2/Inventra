@@ -10,7 +10,7 @@
   justify-content: center;
   align-items: center;
 
-  background-image: url("https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d");
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 52%, #0f766e 100%);
   background-size: cover;
   background-position: center;
 
