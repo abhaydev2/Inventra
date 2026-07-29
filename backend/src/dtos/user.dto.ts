@@ -1,14 +1,8 @@
 import { z } from "zod";
 import { UserSchema } from "../types/user.type";
 
-export const CreateUserDTO = UserSchema.pick({
-    firstName: true,
-    lastName: true,
-    email: true,
-    phone: true,
-    username: true,
-    password: true,
-    role: true
+export const CreateUserDTO = UserSchema.omit({ role: true }).extend({
+    role: z.literal("user").default("user")
 });
 export type CreateUserDTO = z.infer<typeof CreateUserDTO>;
 
