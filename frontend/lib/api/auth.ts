@@ -8,7 +8,6 @@ export interface RegisterPayload {
     phone: string;
     username: string;
     password: string;
-    role: string;
 }
 
 export interface LoginPayload {
@@ -29,6 +28,26 @@ export async function loginUser(payload: LoginPayload) {
         {
             method: "POST",
             body: JSON.stringify(payload)
+        }
+    );
+}
+
+export async function requestPasswordReset(email: string) {
+    return apiRequest<{ data: { message: string; resetToken: string } }>(
+        API_ENDPOINTS.auth.forgotPassword,
+        {
+            method: "POST",
+            body: JSON.stringify({ email })
+        }
+    );
+}
+
+export async function resetPassword(token: string, password: string) {
+    return apiRequest<{ data: any }>(
+        API_ENDPOINTS.auth.resetPassword,
+        {
+            method: "POST",
+            body: JSON.stringify({ token, password })
         }
     );
 }
