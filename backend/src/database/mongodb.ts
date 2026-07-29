@@ -3,6 +3,8 @@ import { MONGODB_URL } from "../configs/constant";
 import { ProductModel } from "../models/product.model";
 import { UserModel } from "../models/user.model";
 
+import bcryptjs from "bcryptjs";
+
 const INITIAL_PRODUCTS = [
   // 1. Shoes
   {
@@ -193,35 +195,60 @@ export const connectToMongoDB = async () => {
         // Count all products in the database
         const totalCount = await ProductModel.countDocuments();
 
-        // If database does not contain exactly our 15 categorized products or has legacy categories
-        if (currentHiveCount < 15 || totalCount > currentHiveCount) {
+        // Ensure there is an admin user on every startup. If none exists, create one
+        // using env vars or sensible defaults (email: admin@gmail.com, password: admin123).
+        try {
+          const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";
+          const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+          let firstAdmin = await UserModel.findOne({ role: "admin" });
+          if (!firstAdmin) {
+            const userByEmail = await UserModel.findOne({ email: ADMIN_EMAIL });
+            if (!userByEmail) {
+              const hashed = await bcryptjs.hash(ADMIN_PASSWORD, 10);
+              firstAdmin = await UserModel.create({
+                firstName: "Admin",
+                lastName: "User",
+                email: ADMIN_EMAIL,
+                username: "admin",
+                password: hashed,
+                role: "admin"
+              } as any);
+              console.log(`Default admin created: ${ADMIN_EMAIL}`);
+            } else {
+              // Promote existing user to admin
+              userByEmail.role = "admin";
+              await userByEmail.save();
+              firstAdmin = userByEmail;
+              console.log(`Existing user promoted to admin: ${ADMIN_EMAIL}`);
+            }
+          }
+
+          // If database does not contain exactly our 15 categorized products or has legacy categories
+          if (currentHiveCount < 15 || totalCount > currentHiveCount) {
             console.log("Database catalog out-of-sync. Clearing and seeding 15 standard products...");
             try {
-                await ProductModel.deleteMany({}); // Clear everything first
-                
-                let creatorId = "60c72b2f9b1d8e1f88a9e012"; // Fallback ObjectId
-                const firstAdmin = await UserModel.findOne({ role: "admin" });
-                if (firstAdmin) {
-                    creatorId = firstAdmin._id.toString();
-                } else {
-                    const anyUser = await UserModel.findOne();
-                    if (anyUser) creatorId = anyUser._id.toString();
-                }
-                
-                await ProductModel.create(
-                    INITIAL_PRODUCTS.map(prod => ({ ...prod, createdBy: creatorId }))
-                );
-                console.log("Database successfully seeded with 15 multi-category stock models!");
+              await ProductModel.deleteMany({}); // Clear everything first
+
+              const creatorId = firstAdmin ? firstAdmin._id.toString() : "60c72b2f9b1d8e1f88a9e012";
+
+              await ProductModel.create(
+                INITIAL_PRODUCTS.map(prod => ({ ...prod, createdBy: creatorId }))
+              );
+              console.log("Database successfully seeded with 15 multi-category stock models!");
             } catch (err: any) {
-                // If parallel processes threw duplicate key, catch gracefully
-                if (err.code === 11000) {
-                    console.log("Database already seeded by parallel process.");
-                } else {
-                    throw err;
-                }
+              if (err.code === 11000) {
+                console.log("Database already seeded by parallel process.");
+              } else {
+                throw err;
+              }
             }
-        } else {
+          } else {
             console.log("Database catalog already seeded and synchronized.");
+          }
+        } catch (err) {
+          console.error("Error ensuring admin or seeding products:", err);
+          throw err;
         }
     } catch (error) {
         console.error("Error connecting to MongoDB:", error);
