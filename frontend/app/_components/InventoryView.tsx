@@ -223,6 +223,10 @@ export default function InventoryView({ role }: { role: string }) {
 
   const handleConfirmAddPopup = () => {
     if (!selectedPopupProduct || popupQty <= 0) return;
+    if (isAdmin) {
+      setSelectedPopupProduct(null);
+      return;
+    }
     addToCart(selectedPopupProduct, popupQty);
     setSelectedPopupProduct(null);
     router.push(`${baseRoute}/products`);
@@ -516,11 +520,11 @@ export default function InventoryView({ role }: { role: string }) {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={handleConfirmAddPopup}
-                    disabled={selectedPopupProduct.quantity === 0}
+                    disabled={selectedPopupProduct.quantity === 0 || isAdmin}
                     className="flex-grow py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold rounded-xl text-xs text-center cursor-pointer shadow-lg shadow-blue-600/10 flex items-center justify-center gap-1.5 text-white"
                   >
                     <FaShoppingCart className="text-xs" />
-                    <span>Add to Products Page</span>
+                    <span>{isAdmin ? "Admins cannot place orders" : "Add to Products Page"}</span>
                   </button>
                   <button
                     onClick={() => setSelectedPopupProduct(null)}
