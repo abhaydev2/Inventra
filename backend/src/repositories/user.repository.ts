@@ -21,7 +21,11 @@ export class UserMongoRepository implements IUserRepository {
     }
 
     async getUserByEmail(email: string): Promise<IUser | null> {
-        return await UserModel.findOne({ email });
+        const normalizedEmail = email.trim();
+        const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return await UserModel.findOne({
+            email: { $regex: `^${escapedEmail}$`, $options: "i" }
+        });
     }
 
     async getUserByUsername(username: string): Promise<IUser | null> {

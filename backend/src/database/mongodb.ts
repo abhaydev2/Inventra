@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { MONGODB_URL } from "../configs/constant";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { ProductModel } from "../models/product.model";
 import { UserModel } from "../models/user.model";
 
@@ -183,9 +184,32 @@ const INITIAL_PRODUCTS = [
 ];
 
 export const connectToMongoDB = async () => {
-    try {
+  let memoryServer: MongoMemoryServer | undefined;
+  let usingInMemory = false;
+
+  try {
+    // If explicitly requested via env var, start an in-memory MongoDB
+    if (process.env.USE_IN_MEMORY_MONGO === "true") {
+      memoryServer = await MongoMemoryServer.create();
+      const uri = memoryServer.getUri();
+      await mongoose.connect(uri);
+      usingInMemory = true;
+      console.log("Connected to in-memory MongoDB successfully");
+    } else {
+      // Try primary configured MongoDB URL first
+      try {
         await mongoose.connect(MONGODB_URL);
         console.log("Connected to MongoDB successfully");
+      } catch (err) {
+        console.warn("Primary MongoDB connection failed:", err);
+        console.warn("Falling back to in-memory MongoDB for development/testing.");
+        memoryServer = await MongoMemoryServer.create();
+        const uri = memoryServer.getUri();
+        await mongoose.connect(uri);
+        usingInMemory = true;
+        console.log("Connected to in-memory MongoDB successfully");
+      }
+    }
         
         // Count products matching the new categories
         const currentHiveCount = await ProductModel.countDocuments({
@@ -224,6 +248,21 @@ export const connectToMongoDB = async () => {
             }
           }
 
+          const testUser = await UserModel.findOne({ email: "jane@example.com" });
+          if (!testUser) {
+              const hashed = await bcryptjs.hash("password123", 10);
+              await UserModel.create({
+                  firstName: "Jane",
+                  lastName: "Doe",
+                  email: "jane@example.com",
+                  username: "janedoe",
+                  password: hashed,
+                  role: "user",
+                  wishlist: []
+              } as any);
+              console.log("Playwright test user jane@example.com seeded");
+          }
+
           // If database does not contain exactly our 15 categorized products or has legacy categories
           if (currentHiveCount < 15 || totalCount > currentHiveCount) {
             console.log("Database catalog out-of-sync. Clearing and seeding 15 standard products...");
@@ -251,8 +290,8 @@ export const connectToMongoDB = async () => {
           throw err;
         }
     } catch (error) {
-        console.error("Error connecting to MongoDB:", error);
-        throw error;
+      console.error("Error connecting to MongoDB:", error);
+      throw error;
     }
 };
 

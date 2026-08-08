@@ -27,9 +27,8 @@ export class OrderController {
 
     async getOrders(req: Request, res: Response) {
         try {
-            const userEmail = (req.user as any).email;
-            const role = (req.user as any).role;
-            const orders = await orderService.getOrders(userEmail, role);
+            const user = req.user as any;
+            const orders = await orderService.getOrders(user._id.toString(), user.role);
             return ApiResponseHelper.success(res, orders, "Orders fetched successfully");
         } catch (error: any) {
             return ApiResponseHelper.error(

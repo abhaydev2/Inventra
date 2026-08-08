@@ -13,6 +13,7 @@ export interface EsewaConfig {
     productCode: string;
     secretKey: string;
     paymentUrl: string;
+    statusUrl: string;
     successUrl: string;
     failureUrl: string;
     taxRatePercent: number;
@@ -38,6 +39,11 @@ export function getEsewaConfig(): EsewaConfig {
         productCode: required("ESEWA_PRODUCT_CODE"),
         secretKey: required("ESEWA_SECRET_KEY"),
         paymentUrl,
+        statusUrl: process.env.ESEWA_STATUS_URL || (
+            environment === "production"
+                ? "https://epay.esewa.com.np/api/epay/transaction/status/"
+                : "https://rc.esewa.com.np/api/epay/transaction/status/"
+        ),
         successUrl: required("ESEWA_SUCCESS_URL"),
         failureUrl: required("ESEWA_FAILURE_URL"),
         taxRatePercent: parseNonNegative("CHECKOUT_TAX_RATE_PERCENT"),

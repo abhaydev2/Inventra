@@ -76,6 +76,13 @@ afterAll(async () => {
     assert.ok(result.token);
     assert.equal(result.user.email, "login@test.com");
 
+    // Email addresses are case-insensitive during authentication.
+    const mixedCaseResult = await service.loginUser({
+      email: "LOGIN@Test.COM",
+      password: "correctpassword"
+    });
+    assert.ok(mixedCaseResult.token);
+
     // Invalid password login
     await assert.rejects(
       service.loginUser({
@@ -95,7 +102,13 @@ afterAll(async () => {
     );
   });
 
-  test("requestPasswordReset creates a token and resetPassword updates the password", async () => {
+  test("requestPasswordReset verifies a code and resetPassword updates the password", async () => {
+    let emailedCode = "";
+    const serviceWithEmail = new UserService(async (_to, code) => {
+      emailedCode = code;
+      return { sent: true };
+    });
+
     await service.createUser({
       firstName: "Reset",
       lastName: "User",
@@ -106,10 +119,15 @@ afterAll(async () => {
       wishlist: []
     });
 
-    const resetRequest = await service.requestPasswordReset("reset@test.com");
-    assert.ok(resetRequest.resetToken);
+    const resetRequest = await serviceWithEmail.requestPasswordReset("reset@test.com");
+    assert.equal(resetRequest.delivery, "email");
+    assert.match(emailedCode, /^\d{6}$/);
+    const verification = await serviceWithEmail.verifyPasswordResetCode(
+      "reset@test.com",
+      emailedCode
+    );
 
-    await service.resetPassword(resetRequest.resetToken, "newpassword123");
+    await serviceWithEmail.resetPassword(verification.resetToken, "newpassword123");
 
     const updatedUser = await UserModel.findOne({ email: "reset@test.com" });
     assert.ok(updatedUser);

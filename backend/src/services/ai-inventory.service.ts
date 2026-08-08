@@ -17,5 +17,17 @@ export class AIInventoryService {
  async product(id:string){const data=await this.analytics.calculate();return data.metrics.find(metric=>metric.productId===id)||null;}
  async image(userId:string,file:Express.Multer.File){let observation="Image saved successfully. Add a Gemini API key to generate an inventory observation.";let aiAvailable=false;try{observation=await this.gemini.analyzeImage(fs.readFileSync(file.path),file.mimetype);aiAvailable=true;}catch{}const saved=await AIImageAnalysisModel.create({userId,image:`/uploads/ai-analysis/${file.filename}`,observation});return {id:saved._id,image:saved.image,observation:saved.observation,aiAvailable,createdAt:saved.createdAt};}
  async imageHistory(userId:string){return AIImageAnalysisModel.find({userId}).sort({createdAt:-1}).limit(12).select("image observation createdAt").lean();}
- async question(question:string){const deterministic=await this.analytics.calculate();const data={summary:deterministic.summary,products:deterministic.metrics.slice(0,Number(process.env.GEMINI_MAX_PRODUCTS_PER_REQUEST||50)),attention:deterministic.attention.slice(0,20)};return {answer:await this.gemini.answerInventoryQuestion(question,data),generatedAt:new Date().toISOString()};}
+ async question(question:string){
+  const deterministic=await this.analytics.calculate();
+  const data={summary:deterministic.summary,products:deterministic.metrics.slice(0,Number(process.env.GEMINI_MAX_PRODUCTS_PER_REQUEST||50)),attention:deterministic.attention.slice(0,20)};
+  try {
+   return {answer:await this.gemini.answerInventoryQuestion(question,data),generatedAt:new Date().toISOString(),fallbackUsed:false};
+  } catch {
+   const urgent=deterministic.attention.slice(0,5);
+   const answer=urgent.length
+    ? `Based on the current inventory calculations, ${urgent.length} item${urgent.length===1?"":"s"} need attention first: ${urgent.map((item:any)=>item.productName).join(", ")}. ${urgent.map((item:any)=>item.recommendedReorderQuantity?`Review and consider reordering ${item.recommendedReorderQuantity} units of ${item.productName}.`:`Review ${item.productName}'s stock status.`).join(" ")} Recommendations require human review.`
+    : "Current inventory calculations do not show urgent stock issues. Continue monitoring stock levels and recent sales before reordering. Recommendations require human review.";
+   return {answer,generatedAt:new Date().toISOString(),fallbackUsed:true};
+  }
+ }
 }

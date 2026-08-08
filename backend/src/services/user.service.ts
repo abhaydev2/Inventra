@@ -4,13 +4,19 @@ import { IUser } from "../models/user.model";
 import { HttpException } from "../exceptions/http-exception";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { SECRET_KEY } from "../configs/constant";
 import { sendPasswordResetEmail } from "../utils/email.util";
 
 const userRepository = new UserMongoRepository();
 
 export class UserService {
+    constructor(
+        private readonly passwordResetEmailSender = sendPasswordResetEmail
+    ) {}
+
     async createUser(userData: CreateUserDTO): Promise<IUser> {
+        userData.email = userData.email.trim().toLowerCase();
         const existingEmail = await userRepository.getUserByEmail(userData.email);
         if (existingEmail) {
             throw new HttpException(400, "Email already exists");
@@ -26,7 +32,7 @@ export class UserService {
     }
 
     async loginUser(loginData: LoginUserDTO) {
-        const user = await userRepository.getUserByEmail(loginData.email);
+        const user = await userRepository.getUserByEmail(loginData.email.trim());
         if (!user) {
             throw new HttpException(400, "Email not registered. Please register first.");
         }
@@ -43,10 +49,53 @@ export class UserService {
         return { user: userWithoutPassword, token };
     }
 
-    async requestPasswordReset(email: string): Promise<{ message: string; resetToken: string }> {
-        const user = await userRepository.getUserByEmail(email);
+    async requestPasswordReset(email: string): Promise<{
+        message: string;
+        delivery: "email";
+    }> {
+        const user = await userRepository.getUserByEmail(email.trim().toLowerCase());
         if (!user) {
             throw new HttpException(404, "Email not registered");
+        }
+
+        const verificationCode = crypto.randomInt(100000, 1000000).toString();
+        const codeHash = await bcryptjs.hash(verificationCode, 10);
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        await userRepository.update(user._id.toString(), {
+            passwordResetToken: codeHash,
+            passwordResetExpiresAt: expiresAt
+        } as any);
+
+        const delivery = await this.passwordResetEmailSender(
+            user.email,
+            verificationCode,
+            user.firstName
+        );
+        if (!delivery.sent) {
+            throw new HttpException(
+                503,
+                "Unable to send the verification email. Check SMTP_USER and SMTP_PASS."
+            );
+        }
+
+        return {
+            message: "Verification code sent to your email",
+            delivery: "email"
+        };
+    }
+
+    async verifyPasswordResetCode(email: string, code: string): Promise<{ resetToken: string }> {
+        const user = await userRepository.getUserByEmail(email.trim().toLowerCase());
+        if (!user || !user.passwordResetToken || !user.passwordResetExpiresAt) {
+            throw new HttpException(400, "Invalid or expired verification code");
+        }
+        if (user.passwordResetExpiresAt < new Date()) {
+            throw new HttpException(400, "Verification code has expired");
+        }
+
+        const validCode = await bcryptjs.compare(code, user.passwordResetToken);
+        if (!validCode) {
+            throw new HttpException(400, "Invalid verification code");
         }
 
         const resetToken = jwt.sign(
@@ -54,21 +103,11 @@ export class UserService {
             SECRET_KEY,
             { expiresIn: "15m" }
         );
-
-        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
         await userRepository.update(user._id.toString(), {
             passwordResetToken: resetToken,
-            passwordResetExpiresAt: expiresAt
+            passwordResetExpiresAt: new Date(Date.now() + 15 * 60 * 1000)
         } as any);
-
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-        const resetLink = `${frontendUrl}/reset_password?token=${resetToken}`;
-        await sendPasswordResetEmail(user.email, resetLink);
-
-        return {
-            message: "Password reset link sent to your email",
-            resetToken
-        };
+        return { resetToken };
     }
 
     async resetPassword(token: string, newPassword: string): Promise<IUser> {
@@ -133,7 +172,10 @@ export class UserService {
         if (!existingUser) {
             throw new HttpException(404, "User not found");
         }
-        if (userData.email && userData.email !== existingUser.email) {
+        if (userData.email) {
+            userData.email = userData.email.trim().toLowerCase();
+        }
+        if (userData.email && userData.email !== existingUser.email.toLowerCase()) {
             const existingEmail = await userRepository.getUserByEmail(userData.email);
             if (existingEmail) {
                 throw new HttpException(400, "Email already exists");

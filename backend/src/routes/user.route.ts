@@ -32,6 +32,7 @@ const userController = new UserController();
 userRouter.post("/register", userController.register);
 userRouter.post("/login", userController.login);
 userRouter.post("/forgot-password", userController.forgotPassword);
+userRouter.post("/verify-reset-code", userController.verifyPasswordResetCode);
 userRouter.post("/reset-password", userController.resetPassword);
 
 // Protected routes (authenticated user)

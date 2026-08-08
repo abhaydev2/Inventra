@@ -140,4 +140,39 @@ afterAll(async () => {
       assert.equal(orderRecord.status, "pending_payment");
     });
   });
+
+  test("POST /payments/esewa/initiate resets legacy carts without exposing a CastError", async () => {
+    await withServer(async baseUrl => {
+      const { token, user } = await createTestUser("user");
+      const address = await AddressModel.create({
+        userId: user._id,
+        fullName: "Test Recipient",
+        phone: "9876543210",
+        line1: "House 10, Road 4",
+        city: "Kathmandu",
+        district: "Kathmandu",
+        isDefault: true
+      });
+
+      // Bypass Mongoose casting to reproduce carts written by an older app/schema.
+      await CartModel.collection.insertOne({
+        userId: user._id,
+        items: [{ productId: "starter_gro_1", quantity: 1 }],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as any);
+
+      const response = await fetch(`${baseUrl}/api/v1/payments/esewa/initiate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ addressId: address._id.toString() })
+      });
+      const body = await response.json();
+
+      assert.equal(response.status, 409);
+      assert.match(body.message, /outdated products/i);
+      const cart = await CartModel.findOne({ userId: user._id });
+      assert.equal(cart?.items.length, 0);
+    });
+  });
 });

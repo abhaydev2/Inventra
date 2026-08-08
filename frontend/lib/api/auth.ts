@@ -33,7 +33,7 @@ export async function loginUser(payload: LoginPayload) {
 }
 
 export async function requestPasswordReset(email: string) {
-    return apiRequest<{ data: { message: string; resetToken: string } }>(
+    return apiRequest<{ data: { message: string; delivery: "email" }; message: string }>(
         API_ENDPOINTS.auth.forgotPassword,
         {
             method: "POST",
@@ -42,8 +42,18 @@ export async function requestPasswordReset(email: string) {
     );
 }
 
+export async function verifyPasswordResetCode(email: string, code: string) {
+    return apiRequest<{ data: { resetToken: string }; message: string }>(
+        API_ENDPOINTS.auth.verifyResetCode,
+        {
+            method: "POST",
+            body: JSON.stringify({ email, code })
+        }
+    );
+}
+
 export async function resetPassword(token: string, password: string) {
-    return apiRequest<{ data: any }>(
+    return apiRequest<{ data: unknown; message: string }>(
         API_ENDPOINTS.auth.resetPassword,
         {
             method: "POST",

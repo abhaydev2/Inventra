@@ -3,6 +3,7 @@
 import "./forgot_password.css";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { requestPasswordReset } from "../../../lib/api/auth";
@@ -12,6 +13,7 @@ type ForgotType = {
 };
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -26,9 +28,14 @@ export default function ForgotPasswordPage() {
 
     try {
       const response = await requestPasswordReset(data.email);
-      setMessage(response.data.message || "Password reset link sent to your email");
-    } catch (error: any) {
-      setMessage(error.message || "Could not send reset link");
+      const email = data.email.trim().toLowerCase();
+      sessionStorage.setItem("passwordResetEmail", email);
+      const successMsg = response.message || "Verification code sent to your email";
+      setMessage(successMsg);
+      alert(successMsg);
+      router.push(`/verify_reset_code?email=${encodeURIComponent(email)}`);
+    } catch (error: unknown) {
+      setMessage(error instanceof Error ? error.message : "Could not send verification code");
     } finally {
       setIsSubmitting(false);
     }

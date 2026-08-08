@@ -65,6 +65,25 @@ export class UserController {
         }
     }
 
+    async verifyPasswordResetCode(req: Request, res: Response) {
+        try {
+            const parsed = z.object({
+                email: z.string().email("Invalid email address"),
+                code: z.string().regex(/^\d{6}$/, "Enter the 6-digit verification code")
+            }).safeParse(req.body);
+            if (!parsed.success) {
+                return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
+            }
+            const result = await userService.verifyPasswordResetCode(
+                parsed.data.email,
+                parsed.data.code
+            );
+            return ApiResponseHelper.success(res, result, "Code verified");
+        } catch (error: any) {
+            return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
+        }
+    }
+
     async getProfile(req: Request, res: Response) {
         try {
             return ApiResponseHelper.success(res, req.user, "Profile fetched successfully");

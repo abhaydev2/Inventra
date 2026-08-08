@@ -6,6 +6,9 @@ import { HttpException } from "../exceptions/http-exception";
 export class CartService {
     async get(userId: string): Promise<ICart> { return CartModel.findOneAndUpdate({ userId }, { $setOnInsert: { userId, items: [] } }, { new: true, upsert: true }); }
     async upsertItem(userId: string, productId: string, quantity: number): Promise<ICart> {
+        if (!mongoose.isValidObjectId(productId)) {
+            throw new HttpException(400, "Invalid product. Refresh the catalog and add the product again.");
+        }
         const product = await ProductModel.findById(productId);
         if (!product) throw new HttpException(404, "Product not found");
         if (quantity > product.quantity) throw new HttpException(400, "Requested quantity exceeds available stock");

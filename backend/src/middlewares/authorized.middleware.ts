@@ -38,10 +38,16 @@ export const authorizedMiddleware = async (
         req.user = user;
         return next();
     } catch (err: Error | any) {
+        const status =
+            err instanceof jwt.JsonWebTokenError ||
+            err instanceof jwt.TokenExpiredError ||
+            err instanceof jwt.NotBeforeError
+                ? 401
+                : err.status || 500;
         return ApiResponseHelper.error(
             res,
-            err.message || "Internal Server Error",
-            err.status || 500
+            status === 401 ? "Your session is invalid or expired. Please log in again." : err.message || "Internal Server Error",
+            status
         );
     }
 };

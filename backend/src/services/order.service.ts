@@ -36,13 +36,20 @@ export class OrderService {
         return newOrder;
     }
 
-    async getOrders(userEmail: string, role: string): Promise<IOrder[]> {
+    async getOrders(userId: string, role: string): Promise<IOrder[]> {
         if (role === "admin") {
             // Admin fetches all orders
             return await OrderModel.find().sort({ createdAt: -1 });
         } else {
-            // User fetches only their own orders
-            return await OrderModel.find({ customerEmail: userEmail }).sort({ createdAt: -1 });
+            // Users only see their own successfully placed COD orders and
+            // verified eSewa orders. Pending/failed eSewa attempts stay hidden.
+            return await OrderModel.find({
+                customerId: userId,
+                $or: [
+                    { paymentMethod: "cod" },
+                    { paymentMethod: "esewa", paymentStatus: "completed" }
+                ]
+            }).sort({ createdAt: -1 });
         }
     }
 
